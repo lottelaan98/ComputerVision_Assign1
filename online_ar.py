@@ -38,6 +38,16 @@ def compute_orientation(rvec):
     return np.degrees(np.arccos(np.clip(cos_angle, -1, 1)))
 
 
+# def hsv_color(distance, angle):
+#     """
+#     Computes HSV color based on distance and orientation rules.
+#     """
+#     v = int(np.clip(255 * (1 - distance / 4.0), 0, 255))
+#     h = int(np.clip(255 * (1 - angle / 45.0), 0, 255))
+#     hsv = np.uint8([[[h, 255, v]]])
+#     return tuple(cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)[0][0])
+
+
 def hsv_color(distance, angle):
     """
     Computes HSV color based on distance and orientation rules.
@@ -45,7 +55,10 @@ def hsv_color(distance, angle):
     v = int(np.clip(255 * (1 - distance / 4.0), 0, 255))
     h = int(np.clip(255 * (1 - angle / 45.0), 0, 255))
     hsv = np.uint8([[[h, 255, v]]])
-    return tuple(cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)[0][0])
+    bgr = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)[0][0]
+    color = (int(bgr[0]), int(bgr[1]), int(bgr[2]))  # convert to plain Python ints
+    return color
+
 
 
 def draw_cube_and_axes(image, rvec, tvec, K, d):
@@ -81,3 +94,40 @@ def draw_cube_and_axes(image, rvec, tvec, K, d):
                 cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,0,0), 2)
 
     return image
+
+if __name__ == "__main__":
+
+    # ------------------- Load calibration results -------------------
+    data_path = "calibration_results.npz"  # change if needed
+
+    data = np.load(data_path, allow_pickle=True)
+    K = data["cameraMatrix_run1"]
+    d = data["distCoeffs_run1"]
+
+    img = cv2.imread("image27.jpeg")
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+    # ------------------- Detect checkerboard corners -------------------
+    CHECKERBOARD_SIZE = (9, 6)
+    found, corners = cv2.findChessboardCorners(gray, CHECKERBOARD_SIZE)
+    if not found:
+        print("Automatic corner detection failed!")
+        exit(1)
+    corners = corners.reshape(-1, 2)
+
+    # ------------------- Create object points -------------------
+    objp = np.zeros((CHECKERBOARD_SIZE[0] * CHECKERBOARD_SIZE[1], 3), np.float32)
+    objp[:, :2] = np.mgrid[0:CHECKERBOARD_SIZE[0], 0:CHECKERBOARD_SIZE[1]].T.reshape(-1, 2)
+    objp *= 0.018  # SQUARE_SIZE in meters
+
+    # ------------------- Estimate pose -------------------
+    rvec, tvec = estimate_pose(objp, corners, K, d)
+
+    # ------------------- Draw cube and axes -------------------
+    out = draw_cube_and_axes(img.copy(), rvec, tvec, K, d)
+
+    # ------------------- Display result -------------------
+    cv2.namedWindow("AR Test", cv2.WINDOW_NORMAL)
+    cv2.imshow("AR Test", out)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()

@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import glob
+import re
 
 CHECKERBOARD_SIZE = (9, 6)    # inner corners (cols, rows)
 SQUARE_SIZE = 0.018           
@@ -113,7 +114,10 @@ def run_offline_calibration():
     """
     Runs all three required calibration experiments and saves the results.
     """
-    images = glob.glob('*.jpeg')
+    images = sorted(
+    glob.glob('*.jpeg'),
+    key=lambda x: int(re.search(r'\d+', x).group())
+)[:25]
     objp = create_object_points()
 
     objpoints, imgpoints, auto = [], [], []
@@ -128,7 +132,7 @@ def run_offline_calibration():
 
     shape = img.shape[1::-1]
 
-    # ---------------- Run 1: all images ----------------
+    # Run 1: all 25 images 
     ret1, K1, d1, rvecs1, tvecs1 = calibrate_camera(
         objpoints, imgpoints, shape
     )
