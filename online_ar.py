@@ -53,7 +53,7 @@ def hsv_color(distance, angle):
     Computes HSV color based on distance and orientation rules.
     """
     v = int(np.clip(255 * (1 - distance / 4.0), 0, 255))
-    h = int(np.clip(255 * (1 - angle / 45.0), 0, 255))
+    h = int(np.clip(179 * (1 - angle / 45.0), 0, 255))
     hsv = np.uint8([[[h, 255, v]]])
     bgr = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)[0][0]
     color = (int(bgr[0]), int(bgr[1]), int(bgr[2]))  # convert to plain Python ints
@@ -67,13 +67,31 @@ def draw_cube_and_axes(image, rvec, tvec, K, d):
     """
     s = SQUARE_SIZE
     axes = np.float32([[0,0,0],[3*s,0,0],[0,3*s,0],[0,0,-3*s]])
+    # cube = np.float32([
+    #     [-s,-s,0],[s,-s,0],[s,s,0],[-s,s,0],
+    #     [-s,-s,-s],[s,-s,-s],[s,s,-s],[-s,s,-s]
+    # ])
     cube = np.float32([
-        [-s,-s,0],[s,-s,0],[s,s,0],[-s,s,0],
-        [-s,-s,-s],[s,-s,-s],[s,s,-s],[-s,s,-s]
+        [0,0,0], [2*s,0,0], [2*s,2*s,0], [0,2*s,0],
+        [0,0,-s*2], [s*2,0,-s*2], [s*2,s*2,-s*2], [0,s*2,-s*2]
     ])
 
     img_axes = project(axes, rvec, tvec, K, d)
     img_cube = project(cube, rvec, tvec, K, d)
+
+    pts = img_cube.astype(int)
+
+    # bottom square (z = 0 plane in your definition)
+    for i in range(4):
+        cv2.line(image, tuple(pts[i]), tuple(pts[(i+1) % 4]), (0, 0, 0), 2)
+
+    # top square (z = -s plane)
+    for i in range(4, 8):
+        cv2.line(image, tuple(pts[i]), tuple(pts[4 + (i+1-4) % 4]), (0, 0, 0), 2)
+
+    # vertical edges
+    for i in range(4):
+        cv2.line(image, tuple(pts[i]), tuple(pts[i+4]), (0, 0, 0), 2)
 
     o = tuple(img_axes[0].astype(int))
     cv2.line(image, o, tuple(img_axes[1].astype(int)), (0,0,255), 3)
@@ -90,8 +108,8 @@ def draw_cube_and_axes(image, rvec, tvec, K, d):
 
     cv2.fillConvexPoly(image, top, color)
     cv2.circle(image, tuple(center_2d), 5, (0,0,0), -1)
-    cv2.putText(image, f"{dist:.2f} m", tuple(center_2d+10),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,0,0), 2)
+    # cv2.putText(image, f"{dist:.2f} m", tuple(center_2d+10),
+    #             cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,0,0), 2)
 
     return image
 

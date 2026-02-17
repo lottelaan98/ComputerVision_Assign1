@@ -3,9 +3,12 @@ import numpy as np
 import glob
 import re
 
-CHECKERBOARD_SIZE = (9, 6)    # inner corners (cols, rows)
+# inner corners (cols, rows)
+CHECKERBOARD_SIZE = (9, 6)    
+# real world scale
 SQUARE_SIZE = 0.018           
 
+# to store the points you click with the mouse (for manual corner selection)
 clicked_points = []
 
 
@@ -38,16 +41,16 @@ def get_manual_corners(image):
 
     clone = image.copy()
 
-    cv2.namedWindow("Manual Corner Selection", cv2.WINDOW_NORMAL)
+    cv2.namedWindow("Manual Corner Selection: From top left, to top right, to bottom right, to bottom left", cv2.WINDOW_NORMAL)
 
-    cv2.setMouseCallback("Manual Corner Selection", mouse_callback)
+    cv2.setMouseCallback("Manual Corner Selection: From top left, to top right, to bottom right, to bottom left", mouse_callback)
 
     while True:
         display = clone.copy()
         for p in clicked_points:
-            cv2.circle(display, p, 5, (0, 0, 255), -1)
+            cv2.circle(display, p, 10, (0, 0, 255), -1)
 
-        cv2.imshow("Manual Corner Selection", display)
+        cv2.imshow("Manual Corner Selection: From top left, to top right, to bottom right, to bottom left", display)
 
         if len(clicked_points) == 4:
             break
@@ -174,3 +177,11 @@ def run_offline_calibration():
         rvecs_run3=rvecs3,
         tvecs_run3=tvecs3,
     )
+
+
+def main():
+    run_offline_calibration()
+
+
+if __name__ == "__main__":
+    main()

@@ -7,7 +7,7 @@
 # Find chestbord corners openCV: https://docs.opencv.org/4.x/dc/dbb/tutorial_py_calibration.html
 # BUT DON'T use the function: cv.findChessboardCorners
 
-# The sizes of the chestbord cells in realword are 1.8 cm X 1.8 cm
+# The sizes of the chestbord cells in realword are 18 mm X 18 mm
 
 import numpy as np
 import cv2 as cv
