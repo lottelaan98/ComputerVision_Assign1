@@ -7,12 +7,18 @@ CHECKERBOARD_SIZE = (9, 6)
 SQUARE_SIZE = 0.018
 
 def create_object_points():
+    """
+    Creates object points for the checkerboard pattern.
+    """
     objp = np.zeros((CHECKERBOARD_SIZE[0] * CHECKERBOARD_SIZE[1], 3), np.float32)
     objp[:, :2] = np.mgrid[0:CHECKERBOARD_SIZE[0], 0:CHECKERBOARD_SIZE[1]].T.reshape(-1, 2)
     objp *= SQUARE_SIZE
     return objp
 
 def detect_corners_all_images(image_glob="*.jpeg"):
+    """
+    Detects chessboard corners in all images matching the glob pattern.
+    """
     images = sorted(glob.glob(image_glob), key=lambda x: int(re.search(r"\d+", x).group()))
     objp = create_object_points()
 
@@ -43,6 +49,9 @@ def detect_corners_all_images(image_glob="*.jpeg"):
     return objpoints, imgpoints, used_files, image_shape
 
 def per_image_reprojection_errors(objpoints, imgpoints, rvecs, tvecs, K, d):
+    """
+    Computes mean reprojection error for each image.
+    """
     errors = []
     for i in range(len(objpoints)):
         proj, _ = cv2.projectPoints(objpoints[i], rvecs[i], tvecs[i], K, d)
@@ -56,7 +65,10 @@ def per_image_reprojection_errors(objpoints, imgpoints, rvecs, tvecs, K, d):
 
 def iterative_reject_calibration(objpoints, imgpoints, files, image_shape,
                                  max_mean_err=0.8, min_images=10):
-    # Work on copies so we can remove items
+    """
+    Performs iterative calibration with outlier rejection based on reprojection error.
+    """
+    # Work on copies 
     objpoints = list(objpoints)
     imgpoints = list(imgpoints)
     files = list(files)

@@ -55,6 +55,9 @@ def hsv_color(distance, angle):
     return color
 
 def order_quad(pts):
+    """
+    Orders 4 points in TL, TR, BR, BL order.
+    """
     pts = np.array(pts, dtype=np.float32)
     s = pts.sum(axis=1)
     d = np.diff(pts, axis=1).reshape(-1)
@@ -65,6 +68,10 @@ def order_quad(pts):
     return np.array([tl, tr, br, bl], dtype=np.float32)
 
 def warp_text_onto_quad(image, quad_pts, text):
+    """
+    Warps text onto a quad defined by quad_pts.
+    """
+    
     quad = order_quad(quad_pts)
 
     W, H = 420, 160
@@ -101,8 +108,6 @@ def warp_text_onto_quad(image, quad_pts, text):
 
     # Overlay only the TEXT pixels (black text)
     image[warped_mask] = warped_canvas[warped_mask]
-
-
 
 def quad_area(quad_pts):
     q = order_quad(quad_pts).astype(np.float32)

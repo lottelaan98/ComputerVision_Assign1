@@ -27,7 +27,7 @@ def main():
     corners = corners.reshape(-1, 2)
     objp = create_object_points()
 
-    # Loop over the three runs
+    # Loop over the 3 runs
     for i in [1, 2, 3]:
         K = data[f"cameraMatrix_run{i}"]
         d = data[f"distCoeffs_run{i}"]
@@ -35,12 +35,10 @@ def main():
         rvec, tvec = estimate_pose(objp, corners, K, d)
         out = draw_cube_and_axes(test_img.copy(), rvec, tvec, K, d)
 
-        # ---- SAVE IMAGE FOR REPORT ----
         filename = f"run{i}_test_cube.png"
         cv2.imwrite(filename, out)
         print(f"Saved {filename}")
 
-        # ---- DISPLAY ----
         window_name = f"Run {i}"
         cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
         cv2.resizeWindow(window_name, 800, 600)
