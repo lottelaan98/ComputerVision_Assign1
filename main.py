@@ -9,7 +9,7 @@ def main():
     """
     Main entry point for offline calibration and online AR visualization.
     """
-    run_offline_calibration()
+    # run_offline_calibration()
 
     data = np.load("calibration_results.npz")
 
@@ -46,16 +46,24 @@ def main():
 
 
 
-    # # dit moet ik nog veranderen door nieuwe .npz file 
-    # for i, run in enumerate(["run1", "run2", "run3"], 1):
-    #     _, K, d, _, _ = data[run]
-    #     rvec, tvec = estimate_pose(objp, corners, K, d)
-    #     out = draw_cube_and_axes(test_img.copy(), rvec, tvec, K, d)
+    data = np.load("calibration_results.npz", allow_pickle=True)
 
-    #     cv2.imshow(f"Run {i}", out)
+    for i in [1, 2, 3]:
+        K = data[f"cameraMatrix_run{i}"]
+        d = data[f"distCoeffs_run{i}"]
 
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
+        rvec, tvec = estimate_pose(objp, corners, K, d)
+        out = draw_cube_and_axes(test_img.copy(), rvec, tvec, K, d)
+
+
+        window = cv2.imshow(f"Run {i}", out)
+
+        cv2.namedWindow(window, cv2.WINDOW_NORMAL)
+        cv2.resizeWindow(window, 800, 600)   # <-- change size here
+        cv2.imshow(window, out)
+
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":
