@@ -9,45 +9,25 @@ def main():
     """
     Main entry point for offline calibration and online AR visualization.
     """
-    # run_offline_calibration()
 
-    data = np.load("calibration_results.npz")
-
-    K = data["cameraMatrix_run1"]
-    d = data["distCoeffs_run1"]
-    rvecs = data["rvecs_run1"]
-    tvecs = data["tvecs_run1"]
-
-
-    print(K)
-    print(d)
-    print(rvecs)
-    print(tvecs)
-
-    # moet nieuwe testimage zien? 
-    test_img = cv2.imread("image27.jpeg")
-
-    objp = create_object_points()
-
-    # corners_test must be detected automatically
-    gray = cv2.cvtColor(test_img, cv2.COLOR_BGR2GRAY)
-    _, corners = cv2.findChessboardCorners(gray, CHECKERBOARD_SIZE)
-    corners = corners.reshape(-1, 2)
-
-
-    rvec, tvec = estimate_pose(objp, corners, K, d)
-    result_img = draw_cube_and_axes(test_img.copy(), rvec, tvec, K, d)
-
-    # ---------------- Show result ----------------
-    cv2.namedWindow("AR Result", cv2.WINDOW_NORMAL)
-    cv2.imshow("AR Result", result_img)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-
-
-
+    # Load calibration results
     data = np.load("calibration_results.npz", allow_pickle=True)
 
+    # Load test image (must be automatically detected)
+    test_img = cv2.imread("image38.jpeg")
+    if test_img is None:
+        raise IOError("Could not load test image")
+
+    gray = cv2.cvtColor(test_img, cv2.COLOR_BGR2GRAY)
+    found, corners = cv2.findChessboardCorners(gray, CHECKERBOARD_SIZE)
+
+    if not found:
+        raise RuntimeError("Chessboard corners NOT found in test image")
+
+    corners = corners.reshape(-1, 2)
+    objp = create_object_points()
+
+    # Loop over the three runs
     for i in [1, 2, 3]:
         K = data[f"cameraMatrix_run{i}"]
         d = data[f"distCoeffs_run{i}"]
@@ -55,12 +35,16 @@ def main():
         rvec, tvec = estimate_pose(objp, corners, K, d)
         out = draw_cube_and_axes(test_img.copy(), rvec, tvec, K, d)
 
+        # ---- SAVE IMAGE FOR REPORT ----
+        filename = f"run{i}_test_cube.png"
+        cv2.imwrite(filename, out)
+        print(f"Saved {filename}")
 
-        window = cv2.imshow(f"Run {i}", out)
-
-        cv2.namedWindow(window, cv2.WINDOW_NORMAL)
-        cv2.resizeWindow(window, 800, 600)   # <-- change size here
-        cv2.imshow(window, out)
+        # ---- DISPLAY ----
+        window_name = f"Run {i}"
+        cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+        cv2.resizeWindow(window_name, 800, 600)
+        cv2.imshow(window_name, out)
 
     cv2.waitKey(0)
     cv2.destroyAllWindows()
@@ -68,3 +52,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
